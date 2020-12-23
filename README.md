@@ -1,10 +1,6 @@
 # Turkish-Car-Plate-TextWatcher
 
-# TurkishCarPlateTextWatcher
-
-
-TextWatcher for Turkish car plates.
-
+This library add an TextWatcher to EditText for Turkish car plates.
 
 The rules are written according to this text:
 
@@ -12,9 +8,9 @@ The rules are written according to this text:
 ilde halen toplam 5 milyon kapasiteye sahip çift harf ve 3 rakam, tek harf ve 4 rakam, 3 harf ve 2 rakam, çift harf ve 4 rakam ile özel isimlerden oluşan plakalar kullanılıyor.
 
 
-Sample usage:
+### Sample usage:
 
-   val editText = findViewById<EditText>(R.id.myEditText)
+        val editText = findViewById<EditText>(R.id.myEditText)
         val button = findViewById<Button>(R.id.myButton)
 
         val carPlateWatcher = PlateTextWatcher(editText)
@@ -29,21 +25,14 @@ Sample usage:
         }
 
 You can update max city count for future:
+   
+      carPlateWatcher.updateMaxCityCount(82)
   
-  carPlateWatcher.updateMaxCityCount(82)
   
+Also you can add forbidden word list and catch function for taking action;
+
+     carPlateWatcher.forbiddenWordList = arrayListOf("AAA", "BBB", "CCC")
+     carPlateWatcher.onForbiddenWordEnteredFunction = {
+         // Take some actions
+     }
   
-Also you can add forbidden word list and can take action;
-
-  val carPlateWatcher = PlateTextWatcher(editText)
-  carPlateWatcher.forbiddenWordList = arrayListOf("AAA", "BBB", "CCC")
-  carPlateWatcher.onForbiddenWordEnteredFunction = {
-      // Take some actions
-  }
-  
-
-
-
-
-
-
