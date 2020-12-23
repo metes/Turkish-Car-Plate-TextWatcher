@@ -1,7 +1,13 @@
 package com.turkishcarplatetextwatcher
 
+import android.text.InputFilter
+import android.text.InputFilter.AllCaps
 import android.text.InputType
 import android.widget.EditText
+import android.widget.Toast
+import java.util.*
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 
 class PlateTextWatcher(private val editText: EditText?) : TextViewListener() {
@@ -9,39 +15,55 @@ class PlateTextWatcher(private val editText: EditText?) : TextViewListener() {
     private var wasEdited = false
     private var maxCityCount: Int = 81
 
+
+    /**
+     * The comparison is made after, word uppercased.
+     */
+    var forbiddenWordList: ArrayList<String> = arrayListOf()
+
+    /**
+     *  You can override this for anything
+     */
+    var onForbiddenWordEnteredFunction: (enteredWord: String) -> Unit = {
+        Toast.makeText(editText?.context, "$it is forbidden", Toast.LENGTH_SHORT).show()
+    }
+
     private val enteredText get() = editText?.text.toString()
 
-    private val isLengthLimitReached: Boolean get() {
-        val lettersLength = getLetters()?.length?: 0
-        val lastDigitsLength = getLastDigits()?.trim()?.length?: 0
+    private val isLengthLimitReached: Boolean
+        get() {
+            val lettersLength = getLetters()?.length ?: 0
+            val lastDigitsLength = getLastDigits()?.trim()?.length ?: 0
 
-        return when (lettersLength) {
-            1 -> lastDigitsLength > 4
-            2 -> lastDigitsLength > 4
-            3 -> lastDigitsLength > 2
-            else -> false
+            return when (lettersLength) {
+                1 -> lastDigitsLength >= 4
+                2 -> lastDigitsLength > 4
+                3 -> lastDigitsLength > 2
+                else -> false
+            }
         }
-    }
 
     /*
         İstanbul Emniyet Müdürlüğü Trafik Tescil Şube Müdürlüğü’nden alınan bilgiye göre,
         ilde halen toplam 5 milyon kapasiteye sahip çift harf ve 3 rakam, tek harf ve 4 rakam,
         3 harf ve 2 rakam, çift harf ve 4 rakam ile özel isimlerden oluşan plakalar kullanılıyor.
      */
-    val isPlateValid: Boolean get()  {
-        val letters = getLetters()
-        val lastDigitsLength = getLastDigits()?.trim()?.length?: 0
+    val isPlateValid: Boolean
+        get() {
+            val letters = getLetters()
+            val lastDigitsLength = getLastDigits()?.trim()?.length ?: 0
 
-        return when (letters?.length) {
-            1 -> lastDigitsLength == 4
-            2 -> lastDigitsLength == 3 || lastDigitsLength == 4
-            3 -> lastDigitsLength == 2
-            else -> false
+            return when (letters?.length) {
+                1 -> lastDigitsLength == 4
+                2 -> lastDigitsLength == 3 || lastDigitsLength == 4
+                3 -> lastDigitsLength == 2
+                else -> false
+            }
         }
-    }
 
     init {
         this.editText?.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+        this.editText?.filters = arrayOf<InputFilter>(AllCaps())
         this.editText?.addTextChangedListener(this)
     }
 
@@ -86,21 +108,29 @@ class PlateTextWatcher(private val editText: EditText?) : TextViewListener() {
                 }
             }
             if (newText.length == 3 && !newText.contains(" ") && !isDelete) {
-                return newText.substring(0, 2) + " " +
-                        if (!isFullNumber(newText[2].toString())) newText[2].toString() else ""
+                val thirdChar = if (!isFullNumber(newText[2].toString())) newText[2].toString() else ""
+                newText = newText.substring(0, 2) + " " + thirdChar
             }
             if (newText.length == 3 && isDelete) {
                 return newText.substring(0, 2)
             } else if (newText.length == 4) {
                 // 4. karakteri harf olmasi icin zorla
-                if (isFullNumber(newText[3].toString())) {
+                if (isFullNumber(newText[3].toString()) ) {
                     return removeLast(newText)
+                } else if (!isLettersValid(newText[3].toString())) {
+                    onForbiddenWordEnteredFunction(newText[3].toString())
+                    return newText.substring(0, 2)
                 }
             } else if (newText.length > 4) {
                 // Orta (harflerin yer aldigi) bolumde mi?
                 if (!haveTwoSpace(newText)) {
                     // Orta bolumde 3'den fazla harf olamaz
                     val letterSequence = newText.substring(newText.indexOf(" "))
+
+                    if (!isLettersValid(letterSequence)) {
+                        onForbiddenWordEnteredFunction(letterSequence)
+                        return newText.substring(0, 2)
+                    }
                     if (letterSequence.length > 4) {
                         if (isDelete || !isFullNumber(getLastChar(newText))) {
                             newText = removeLast(newText)
@@ -133,6 +163,9 @@ class PlateTextWatcher(private val editText: EditText?) : TextViewListener() {
     }
 
     private fun isCityCodeValid(newText: String): Boolean {
+        if (newText == "0") {
+            return true
+        }
         val cityCode = newText.toInt()
         return cityCode in 1..maxCityCount
     }
@@ -185,5 +218,19 @@ class PlateTextWatcher(private val editText: EditText?) : TextViewListener() {
         return true
     }
 
+    private fun isLettersValid(unTrimmedText: String): Boolean {
+        val text = unTrimmedText.trim()
+        text.toCharArray().forEach { textChar ->
+            if (!Character.isDigit(textChar)) {
+                val ps: Pattern = Pattern.compile("^[a-zA-Z ]+$")
+                val ms: Matcher = ps.matcher(textChar.toString())
+                val isInvalidChar = !ms.matches()
+                if (isInvalidChar || forbiddenWordList.any { it == text.toUpperCase(Locale.US) }) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
 }
 

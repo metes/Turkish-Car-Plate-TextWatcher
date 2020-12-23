@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         val button = findViewById<Button>(R.id.myButton)
 
         val carPlateWatcher = PlateTextWatcher(editText)
+        carPlateWatcher.forbiddenWordList = arrayListOf("MM")
 
         button.setOnClickListener {
             val validationResult = if (carPlateWatcher.isPlateValid) {
