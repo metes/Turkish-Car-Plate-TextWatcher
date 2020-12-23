@@ -36,3 +36,18 @@ Also you can add forbidden word list and catch function for taking action;
          // Take some actions
      }
   
+
+## Add to project
+
+You can at library via Jitpack
+        
+Project level build gradle:
+        
+    maven { url 'https://jitpack.io' }
+    
+Module level build gradle:    
+    
+    implementation 'com.github.metes:Turkish-Car-Plate-TextWatcher:1.0.0'
+    
+    
+    
