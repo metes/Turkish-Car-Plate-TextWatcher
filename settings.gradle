@@ -1,0 +1,3 @@
+include ':TurkishCarPlateTextWatcher'
+include ':app:PlateTextWatch', ':app'
+rootProject.name = "My Application"
