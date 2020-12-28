@@ -1,6 +1,6 @@
 # Turkish-Car-Plate-TextWatcher
 
-This library add an TextWatcher to EditText for Turkish car plates.
+This library is a EditText TextWatcher for Turkish car plates.
 
 The rules are written according to this text:
 
